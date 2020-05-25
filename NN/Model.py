@@ -1,10 +1,15 @@
+import abc
+import numpy as np
+from NN.CoreUtility import *
+
+
 class Model(abc.ABC):
     @abc.abstractmethod
-    def addLayer(self):
+    def add_layer(self):
         pass
 
     @abc.abstractmethod
-    def train(self, input, target, lr):
+    def train(self, x, y, lr):
         pass
 
 
@@ -13,45 +18,43 @@ class LinearModel(Model):
     def __init__(self):
         self.layers = []
         self.loss = SquareLoss()
-        self.input = None
+        self.x = None
         self.output = None
         self.lossTrace = []
 
-    def addLayer(self, layer):
+    def add_layer(self, layer):
         self.layers.append(layer)
 
-    def forward(self, input):
-        self.input = input
-        cur_input = input
+    def forward(self, x):
+        self.x = x
+        cur_x = x
         for layer in self.layers:
-            cur_input = layer.calculate(cur_input)
-        self.output = cur_input
+            cur_x = layer.calculate(cur_x)
+        self.output = cur_x
 
-    # 2d matrix can perfectly handle input batch
-    def backward(self, target, lr):
-        self.loss.calculate(self.output, target)
-        pre = self.loss.getDerive()
+    # 2d matrix can perfectly handle x batch
+    def backward(self, y, lr):
+        self.loss.calculate(self.output, y)
+        pre = self.loss.get_derive()
         for layer in reversed(self.layers):
             layer.update(pre, lr)
-            pre = layer.dI
+            pre = layer.get_derive()
 
-    def train(self, input, target, lr):
-        self.forward(input)
-        self.backward(target, lr)
+    def train(self, x, y, lr=1.0):
+        self.forward(x)
+        self.backward(y, lr)
         self.lossTrace.append(np.trace(self.loss.loss))
 
-    def printDetailDebugInfo(self):
-        print("Debug info for this iteration:")
-        print("the input is: ")
-        print(self.input)
+    def print_detail_info(self):
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("the x is: ")
+        print(self.x)
         print("the output is: ")
         print(self.output)
         print("the loss is: ")
         print(self.loss.loss)
-        for layer in self.layers:
-            layer.printDebugInfo()
 
-    def printDebugInfo(self):
+    def print_info(self):
         print("Total loss is: ")
         print(np.trace(self.loss.loss))
 
